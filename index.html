@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Examen División Celular</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body { font-family: Arial; margin: 20px; }
+.hidden { display: none; }
+.timer { color: red; font-size: 20px; }
+.correcta { color: green; }
+.incorrecta { color: red; }
+</style>
+</head>
+
+<body>
+
+<h2>Examen Biología - División Celular</h2>
+
+<div id="inicio">
+Nombre: <input id="nombre"><br><br>
+Cuenta: <input id="cuenta"><br><br>
+<button onclick="iniciar()">Iniciar</button>
+</div>
+
+<div id="examen" class="hidden">
+<div class="timer">Tiempo: <span id="tiempo"></span></div>
+<form id="form"></form>
+<button onclick="terminar()">Finalizar</button>
+</div>
+
+<div id="resultado" class="hidden">
+<h3>Resultados</h3>
+<div id="datos"></div>
+<div id="calif"></div>
+<div id="detalle"></div>
+<button onclick="pdf()">Descargar PDF</button>
+</div>
+
+<script>
+
+const preguntas = [
+["Resultado de la mitosis","4 haploides","2 idénticas","2 haploides","4 diploides","B"],
+["Función mitosis","Gametos","Reducir","Mantener info","Variabilidad","C"],
+["Fase alineación","Profase","Metafase","Anafase","Telofase","B"],
+["Anafase","Duplica","Separa cromátidas","Forma núcleos","Alinea","B"],
+["Citocinesis","Núcleo","ADN","Citoplasma","Huso","C"],
+["Meiosis ocurre","Somáticas","Neuronas","Sexuales","Musculares","C"],
+["Resultado meiosis","2 diploides","4 haploides","2 haploides","4 iguales","B"],
+["Entrecruzamiento","Profase I","Metafase I","Anafase II","Telofase","A"],
+["Meiosis I","Cromátidas","ADN","Homólogos","Núcleos","C"],
+["Meiosis II","Homólogos","Cromátidas","Núcleos","Genes","B"],
+["Mitosis","Variabilidad","Reducción","Idénticas","Gametos","C"],
+["Meiosis","Idénticas","No recomb","Variabilidad","1 división","C"],
+["Sinapsis","Mitosis","Profase I","Metafase II","Telofase","B"],
+["Divisiones meiosis","1","2","3","4","B"],
+["Función meiosis","Reparar","Idénticas","Gametos","ADN","C"],
+["Hijas mitosis","Haploides","Diferentes","Idénticas","Mutadas","C"],
+["Cromosomas meiosis","Duplica","Reduce","Igual","Triplica","B"],
+["Variabilidad","ADN","Citocinesis","Entrecruzamiento","Mitosis","C"],
+["Mitosis sirve","Sexual","Gametos","Crecimiento","Reducción","C"],
+["Diferencia","4 células","Idénticas meiosis","Conserva mitosis","Somáticas meiosis","C"]
+];
+
+let tiempo = preguntas.length * 65;
+let inter;
+
+function iniciar(){
+if(!nombre.value || !cuenta.value){ alert("Completa datos"); return;}
+inicio.classList.add("hidden");
+examen.classList.remove("hidden");
+cargar();
+timer();
+}
+
+function cargar(){
+preguntas.forEach((p,i)=>{
+form.innerHTML+=`<p>${i+1}. ${p[0]}</p>
+<input type="radio" name="p${i}" value="A"> ${p[1]}<br>
+<input type="radio" name="p${i}" value="B"> ${p[2]}<br>
+<input type="radio" name="p${i}" value="C"> ${p[3]}<br>
+<input type="radio" name="p${i}" value="D"> ${p[4]}<br>`;
+});
+}
+
+function timer(){
+inter=setInterval(()=>{
+tiempo--;
+tiempoSpan.innerText=tiempo+" s";
+if(tiempo<=0) terminar();
+},1000);
+}
+
+function terminar(){
+clearInterval(inter);
+let aciertos=0;
+let detalleHTML="";
+
+preguntas.forEach((p,i)=>{
+let r=document.querySelector(`input[name="p${i}"]:checked`);
+let resp=r?r.value:"-";
+let correcta=p[5];
+
+if(resp===correcta) aciertos++;
+
+detalleHTML+=`<p class="${resp===correcta?'correcta':'incorrecta'}">
+${i+1}. Tu respuesta: ${resp} | Correcta: ${correcta}
+</p>`;
+});
+
+let cal=(aciertos/preguntas.length*10).toFixed(2);
+
+examen.classList.add("hidden");
+resultado.classList.remove("hidden");
+
+datos.innerText=`Nombre: ${nombre.value} | Cuenta: ${cuenta.value}`;
+calif.innerText=`Calificación: ${cal} (${aciertos}/20)`;
+detalle.innerHTML=detalleHTML;
+}
+
+function pdf(){
+const {jsPDF}=window.jspdf;
+let doc=new jsPDF();
+
+doc.text("Resultado Examen",10,10);
+doc.text(datos.innerText,10,20);
+doc.text(calif.innerText,10,30);
+
+let y=40;
+preguntas.forEach((p,i)=>{
+let r=document.querySelector(`input[name="p${i}"]:checked`);
+let resp=r?r.value:"-";
+doc.text(`${i+1}. Resp: ${resp} | Correcta: ${p[5]}`,10,y);
+y+=7;
+});
+
+doc.save("resultado.pdf");
+}
+
+</script>
+
+</body>
+</html>
